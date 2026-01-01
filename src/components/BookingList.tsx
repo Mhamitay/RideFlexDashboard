@@ -132,7 +132,6 @@ const AddrWrapper = styled.span`
 
 const ActionButton = styled.button<{variant?: 'refund' | 'cancel' | 'info'}>`
   padding: 8px 12px;
-  margin-right: 8px;
   margin-bottom: 4px;
   border: none;
   border-radius: 8px;
@@ -140,9 +139,11 @@ const ActionButton = styled.button<{variant?: 'refund' | 'cancel' | 'info'}>`
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  width: 100%;
   
   ${props => props.variant === 'refund' ? `
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
