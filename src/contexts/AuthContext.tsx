@@ -13,7 +13,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize authentication state....
+  // Initialize authentication state.......
   useEffect(() => {
     const initializeAuth = async () => {
       try {
