@@ -685,6 +685,15 @@ export default function BookingList({ bookings, loading, onRefresh }:{
               </InfoField>
             </FormGroup>
 
+            <FormGroup>
+              <Label>Booking Created</Label>
+              <InfoField>
+                {selectedBooking.createdAt 
+                  ? new Date(selectedBooking.createdAt).toLocaleString()
+                  : '—'}
+              </InfoField>
+            </FormGroup>
+
             {selectedBooking.digitalSignature && (
               <FormGroup>
                 <Label>Digital Signature</Label>
