@@ -217,3 +217,23 @@ export async function callCustomer(request: CallCustomerRequest): Promise<CallCu
   return await res.json()
 }
 
+/**
+ * Complete a booking (mark as completed)
+ * @param bookingId - The booking GUID to complete
+ */
+export async function completeBooking(bookingId: string): Promise<{ success: boolean; message: string }> {
+  const res = await authService.authenticatedFetch(`${API_BASE}/api/dashboard/bookings/${bookingId}/complete`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: 'Unknown error' }))
+    throw new Error(errorData.message || `Complete booking failed: ${res.status} ${res.statusText}`)
+  }
+
+  return await res.json()
+}
+

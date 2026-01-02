@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
 import type { RecentBooking, RefundRequest, CancellationRequest, CallCustomerRequest } from '../api'
-import { processRefund, cancelBooking, callCustomer } from '../api'
+import { processRefund, cancelBooking, callCustomer, completeBooking } from '../api'
 
 const Table = styled.table`
   width: 100%;
@@ -197,6 +197,29 @@ const ActionButton = styled.button<{variant?: 'refund' | 'cancel' | 'info'}>`
     &:hover {
       background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
       box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+    
+    &:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+  ` : props.variant === 'complete' ? `
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+    width: 100%;
+    margin-top: 8px;
+    
+    &:hover {
+      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+      box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
       transform: translateY(-1px);
     }
     
@@ -432,6 +455,10 @@ export default function BookingList({ bookings, loading, onRefresh }:{
   const [isCallingCustomer, setIsCallingCustomer] = useState(false)
   const [callStatus, setCallStatus] = useState<string | null>(null)
 
+  // Complete ride state
+  const [isCompletingRide, setIsCompletingRide] = useState(false)
+  const [completeStatus, setCompleteStatus] = useState<string | null>(null)
+
   if(loading) return <LoadingState>Loading bookings...</LoadingState>
   if(!bookings || bookings.length===0) return <EmptyState>📋 No recent bookings found</EmptyState>
 
@@ -560,6 +587,45 @@ export default function BookingList({ bookings, loading, onRefresh }:{
       setCallStatus(`❌ Error: ${error.message}`)
     } finally {
       setIsCallingCustomer(false)
+    }
+  }
+
+  const handleCompleteRide = async () => {
+    if (!selectedBooking?.id) {
+      alert('No booking selected')
+      return
+    }
+
+    console.log('[CompleteRide] Attempting to complete booking:', selectedBooking.id)
+
+    if (!window.confirm('Are you sure you want to mark this ride as completed?')) {
+      return
+    }
+
+    setIsCompletingRide(true)
+    setCompleteStatus(null)
+
+    try {
+      console.log('[CompleteRide] Calling API with bookingId:', selectedBooking.id)
+      const result = await completeBooking(selectedBooking.id)
+      
+      if (result.success) {
+        setCompleteStatus(`✅ ${result.message}`)
+        // Update the booking status locally so UI reflects the change
+        if (selectedBooking) {
+          selectedBooking.status = 'Completed'
+        }
+        // Optionally refresh the bookings list
+        if (onRefresh) {
+          setTimeout(() => onRefresh(), 1500)
+        }
+      } else {
+        setCompleteStatus(`❌ ${result.message}`)
+      }
+    } catch (error: any) {
+      setCompleteStatus(`❌ Error: ${error.message}`)
+    } finally {
+      setIsCompletingRide(false)
     }
   }
 
@@ -851,10 +917,35 @@ export default function BookingList({ bookings, loading, onRefresh }:{
               </CallSection>
             )}
 
+            {/* Complete Ride Section */}
+            {selectedBooking.status !== 'Completed' && selectedBooking.status !== 'Cancelled' && (
+              <CallSection>
+                <CallSectionHeader>✅ Complete Ride</CallSectionHeader>
+                <CallSectionDescription>
+                  Mark this ride as completed. This action cannot be undone.
+                </CallSectionDescription>
+
+                {completeStatus && (
+                  <CallStatusMessage success={completeStatus.startsWith('✅')}>
+                    {completeStatus}
+                  </CallStatusMessage>
+                )}
+
+                <ActionButton
+                  variant="complete"
+                  onClick={handleCompleteRide}
+                  disabled={isCompletingRide}
+                >
+                  {isCompletingRide ? '⏳ Completing...' : '✅ Complete Ride'}
+                </ActionButton>
+              </CallSection>
+            )}
+
             <ButtonGroup>
               <ActionButton onClick={() => {
                 setShowCustomerModal(false)
                 setCallStatus(null)
+                setCompleteStatus(null)
               }}>
                 Close
               </ActionButton>
