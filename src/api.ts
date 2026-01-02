@@ -155,3 +155,65 @@ export async function fetchChatBookings(page = 1, pageSize = 50): Promise<ChatBo
 
   return await res.json()
 }
+
+// ============================================
+// Twilio Call Customer API
+// ============================================
+
+/**
+ * Request to initiate a call to a customer.
+ * Both phone numbers must be in E.164 format (e.g., +14155551234).
+ */
+export type CallCustomerRequest = {
+  /** Customer's phone number in E.164 format */
+  customerPhone: string;
+  /** Your phone number in E.164 format - Twilio will call YOU first */
+  myPhone: string;
+}
+
+/**
+ * Response from initiating a customer call.
+ */
+export type CallCustomerResponse = {
+  /** Whether the call was successfully initiated */
+  success: boolean;
+  /** Twilio's unique call identifier */
+  callSid?: string;
+  /** Current call status (queued, ringing, in-progress, etc.) */
+  status?: string;
+  /** Human-readable message about the result */
+  message: string;
+  /** Error details if the call failed */
+  error?: string;
+}
+
+/**
+ * Initiates a bridged call to a customer via Twilio.
+ * 
+ * Call flow:
+ * 1. Twilio calls YOUR phone (myPhone) first
+ * 2. When you answer, you hear "Connecting you to the customer now"
+ * 3. Twilio then dials the customer's phone
+ * 4. Customer sees only the RideFlex Twilio number (your personal number is hidden)
+ * 5. Both parties are connected for conversation
+ * 
+ * @param request - Contains customerPhone and myPhone in E.164 format
+ * @returns Call result with callSid and status
+ */
+export async function callCustomer(request: CallCustomerRequest): Promise<CallCustomerResponse> {
+  const res = await authService.authenticatedFetch(`${API_BASE}/api/call/call-customer`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: 'Unknown error' }))
+    throw new Error(errorData.message || `Call failed: ${res.status} ${res.statusText}`)
+  }
+
+  return await res.json()
+}
+

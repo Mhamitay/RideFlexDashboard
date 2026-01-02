@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
-import type { RecentBooking, RefundRequest, CancellationRequest } from '../api'
-import { processRefund, cancelBooking } from '../api'
+import type { RecentBooking, RefundRequest, CancellationRequest, CallCustomerRequest } from '../api'
+import { processRefund, cancelBooking, callCustomer } from '../api'
 
 const Table = styled.table`
   width: 100%;
@@ -187,6 +187,29 @@ const ActionButton = styled.button<{variant?: 'refund' | 'cancel' | 'info'}>`
     &:active {
       transform: translateY(0);
     }
+  ` : props.variant === 'call' ? `
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+    width: 100%;
+    margin-top: 8px;
+    
+    &:hover {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+    
+    &:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
   ` : `
     background: #f3f4f6;
     color: #374151;
@@ -212,6 +235,45 @@ const SignatureImage = styled.img`
   border: 1px solid #e5e7eb;
   border-radius: 4px;
   background: #fff;
+`
+
+// Call Customer Section Styles
+const CallSection = styled.div`
+  margin-top: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 1px solid #86efac;
+  border-radius: 8px;
+`
+
+const CallSectionHeader = styled.h4`
+  margin: 0 0 8px 0;
+  color: #166534;
+  font-size: 16px;
+  font-weight: 600;
+`
+
+const CallSectionDescription = styled.p`
+  margin: 0 0 16px 0;
+  color: #15803d;
+  font-size: 13px;
+  line-height: 1.5;
+`
+
+const CallStatusMessage = styled.div<{ success?: boolean }>`
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  ${props => props.success ? `
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+  ` : `
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  `}
 `
 
 const Modal = styled.div`
@@ -364,6 +426,11 @@ export default function BookingList({ bookings, loading, onRefresh }:{
   const [cancelReason, setCancelReason] = useState('')
   const [issueRefundOnCancel, setIssueRefundOnCancel] = useState(true)
   const [isProcessing, setIsProcessing] = useState(false)
+  
+  // Call customer state
+  const [myPhoneNumber, setMyPhoneNumber] = useState('')
+  const [isCallingCustomer, setIsCallingCustomer] = useState(false)
+  const [callStatus, setCallStatus] = useState<string | null>(null)
 
   if(loading) return <LoadingState>Loading bookings...</LoadingState>
   if(!bookings || bookings.length===0) return <EmptyState>📋 No recent bookings found</EmptyState>
@@ -450,6 +517,49 @@ export default function BookingList({ bookings, loading, onRefresh }:{
       alert(`Error cancelling booking: ${error.message}`)
     } finally {
       setIsProcessing(false)
+    }
+  }
+
+  /**
+   * Initiates a call to the customer via Twilio.
+   * 
+   * Flow:
+   * 1. Twilio calls YOUR phone (myPhoneNumber) first
+   * 2. When you answer, you hear "Connecting you to the customer now"
+   * 3. Twilio then dials the customer's phone
+   * 4. Customer sees only the RideFlex Twilio number (your real number is hidden)
+   */
+  const handleCallCustomer = async () => {
+    if (!selectedBooking?.clientPhone) {
+      alert('Customer phone number not available')
+      return
+    }
+
+    if (!myPhoneNumber.trim()) {
+      alert('Please enter your phone number')
+      return
+    }
+
+    setIsCallingCustomer(true)
+    setCallStatus(null)
+
+    try {
+      const request: CallCustomerRequest = {
+        customerPhone: selectedBooking.clientPhone,
+        myPhone: myPhoneNumber
+      }
+
+      const result = await callCustomer(request)
+      
+      if (result.success) {
+        setCallStatus(`✅ ${result.message}`)
+      } else {
+        setCallStatus(`❌ ${result.message}`)
+      }
+    } catch (error: any) {
+      setCallStatus(`❌ Error: ${error.message}`)
+    } finally {
+      setIsCallingCustomer(false)
     }
   }
 
@@ -704,8 +814,48 @@ export default function BookingList({ bookings, loading, onRefresh }:{
               </FormGroup>
             )}
 
+            {/* Call Customer Section */}
+            {selectedBooking.clientPhone && (
+              <CallSection>
+                <CallSectionHeader>📞 Call Customer</CallSectionHeader>
+                <CallSectionDescription>
+                  Enter your phone number below. Twilio will call YOU first, 
+                  then connect you to the customer. The customer will only see 
+                  our business number, not your personal number.
+                </CallSectionDescription>
+                
+                <FormGroup>
+                  <Label>Your Phone Number (E.164 format)</Label>
+                  <Input
+                    type="tel"
+                    value={myPhoneNumber}
+                    onChange={e => setMyPhoneNumber(e.target.value)}
+                    placeholder="+14155551234"
+                    disabled={isCallingCustomer}
+                  />
+                </FormGroup>
+
+                {callStatus && (
+                  <CallStatusMessage success={callStatus.startsWith('✅')}>
+                    {callStatus}
+                  </CallStatusMessage>
+                )}
+
+                <ActionButton
+                  variant="call"
+                  onClick={handleCallCustomer}
+                  disabled={isCallingCustomer || !myPhoneNumber.trim()}
+                >
+                  {isCallingCustomer ? '📞 Initiating Call...' : '📞 Call Customer'}
+                </ActionButton>
+              </CallSection>
+            )}
+
             <ButtonGroup>
-              <ActionButton onClick={() => setShowCustomerModal(false)}>
+              <ActionButton onClick={() => {
+                setShowCustomerModal(false)
+                setCallStatus(null)
+              }}>
                 Close
               </ActionButton>
             </ButtonGroup>
