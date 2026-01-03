@@ -130,7 +130,7 @@ const AddrWrapper = styled.span`
   }
 `
 
-const ActionButton = styled.button<{variant?: 'refund' | 'cancel' | 'info'}>`
+const ActionButton = styled.button.attrs({ type: 'button' })<{variant?: 'refund' | 'cancel' | 'info' | 'call' | 'complete' | 'assign'}>`
   padding: 8px 12px;
   margin-bottom: 4px;
   border: none;
@@ -687,7 +687,9 @@ export default function BookingList({ bookings, loading, onRefresh }:{
   /**
    * Opens driver assignment modal and fetches available drivers
    */
-  const handleAssignDriver = async (booking: RecentBooking) => {
+  const handleAssignDriver = async (booking: RecentBooking, e?: React.MouseEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
     setSelectedBooking(booking)
     setShowAssignDriverModal(true)
     setAssignmentStatus(null)
@@ -803,13 +805,13 @@ export default function BookingList({ bookings, loading, onRefresh }:{
                 </ActionButton>
                 {/* Show Assign Driver for confirmed/pending bookings */}
                 {(b.status?.toLowerCase() === 'confirmed' || b.status?.toLowerCase() === 'pendingpayment') && (
-                  <ActionButton variant="assign" onClick={() => handleAssignDriver(b)}>
+                  <ActionButton variant="assign" onClick={(e) => handleAssignDriver(b, e)}>
                     🚗 Assign Driver
                   </ActionButton>
                 )}
                 {/* Show reassign option for assigned bookings */}
                 {b.status?.toLowerCase() === 'driverassigned' && (
-                  <ActionButton variant="assign" onClick={() => handleAssignDriver(b)}>
+                  <ActionButton variant="assign" onClick={(e) => handleAssignDriver(b, e)}>
                     🔄 Reassign
                   </ActionButton>
                 )}
