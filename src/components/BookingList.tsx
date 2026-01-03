@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
-import type { RecentBooking, RefundRequest, CancellationRequest, CallCustomerRequest } from '../api'
-import { processRefund, cancelBooking, callCustomer, completeBooking } from '../api'
+import type { RecentBooking, RefundRequest, CancellationRequest, CallCustomerRequest, AvailableDriver } from '../api'
+import { processRefund, cancelBooking, callCustomer, completeBooking, getAvailableDrivers, assignDriver, unassignDriver } from '../api'
 
 const Table = styled.table`
   width: 100%;
@@ -233,6 +233,27 @@ const ActionButton = styled.button<{variant?: 'refund' | 'cancel' | 'info'}>`
       transform: none;
       box-shadow: none;
     }
+  ` : props.variant === 'assign' ? `
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+    
+    &:hover {
+      background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+      box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+    
+    &:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
   ` : `
     background: #f3f4f6;
     color: #374151;
@@ -241,6 +262,32 @@ const ActionButton = styled.button<{variant?: 'refund' | 'cancel' | 'info'}>`
       background: #e5e7eb;
     }
   `}
+`
+
+const DriverSelect = styled.select`
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &:hover {
+    border-color: #94a3b8;
+  }
+
+  option {
+    padding: 8px;
+  }
 `
 
 const InfoField = styled.div`
@@ -442,6 +489,7 @@ export default function BookingList({ bookings, loading, onRefresh }:{
   const [showRefundModal, setShowRefundModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showCustomerModal, setShowCustomerModal] = useState(false)
+  const [showAssignDriverModal, setShowAssignDriverModal] = useState(false)
   const [selectedBooking, setSelectedBooking] = useState<RecentBooking | null>(null)
   const [refundType, setRefundType] = useState<'full' | 'partial'>('full')
   const [partialAmount, setPartialAmount] = useState('')
@@ -458,6 +506,13 @@ export default function BookingList({ bookings, loading, onRefresh }:{
   // Complete ride state
   const [isCompletingRide, setIsCompletingRide] = useState(false)
   const [completeStatus, setCompleteStatus] = useState<string | null>(null)
+
+  // Driver assignment state
+  const [availableDrivers, setAvailableDrivers] = useState<AvailableDriver[]>([])
+  const [isLoadingDrivers, setIsLoadingDrivers] = useState(false)
+  const [selectedDriverId, setSelectedDriverId] = useState<string>('')
+  const [isAssigningDriver, setIsAssigningDriver] = useState(false)
+  const [assignmentStatus, setAssignmentStatus] = useState<string | null>(null)
 
   if(loading) return <LoadingState>Loading bookings...</LoadingState>
   if(!bookings || bookings.length===0) return <EmptyState>📋 No recent bookings found</EmptyState>
@@ -629,6 +684,87 @@ export default function BookingList({ bookings, loading, onRefresh }:{
     }
   }
 
+  /**
+   * Opens driver assignment modal and fetches available drivers
+   */
+  const handleAssignDriver = async (booking: RecentBooking) => {
+    setSelectedBooking(booking)
+    setShowAssignDriverModal(true)
+    setAssignmentStatus(null)
+    setSelectedDriverId('')
+    setIsLoadingDrivers(true)
+
+    try {
+      const drivers = await getAvailableDrivers()
+      setAvailableDrivers(drivers)
+    } catch (error: any) {
+      setAssignmentStatus(`❌ Error loading drivers: ${error.message}`)
+    } finally {
+      setIsLoadingDrivers(false)
+    }
+  }
+
+  /**
+   * Assigns selected driver to booking
+   */
+  const handleConfirmAssignDriver = async () => {
+    if (!selectedBooking?.id || !selectedDriverId) {
+      alert('Please select a driver')
+      return
+    }
+
+    setIsAssigningDriver(true)
+    setAssignmentStatus(null)
+
+    try {
+      const result = await assignDriver(selectedBooking.id, selectedDriverId)
+      
+      if (result.success) {
+        setAssignmentStatus(`✅ ${result.message}`)
+        if (onRefresh) {
+          setTimeout(() => onRefresh(), 1500)
+        }
+      } else {
+        setAssignmentStatus(`❌ ${result.message}`)
+      }
+    } catch (error: any) {
+      setAssignmentStatus(`❌ Error: ${error.message}`)
+    } finally {
+      setIsAssigningDriver(false)
+    }
+  }
+
+  /**
+   * Unassigns driver from booking
+   */
+  const handleUnassignDriver = async () => {
+    if (!selectedBooking?.id) return
+
+    if (!window.confirm('Are you sure you want to unassign the driver from this booking?')) {
+      return
+    }
+
+    setIsAssigningDriver(true)
+    setAssignmentStatus(null)
+
+    try {
+      const result = await unassignDriver(selectedBooking.id)
+      
+      if (result.success) {
+        setAssignmentStatus(`✅ ${result.message}`)
+        if (onRefresh) {
+          setTimeout(() => onRefresh(), 1500)
+        }
+      } else {
+        setAssignmentStatus(`❌ ${result.message}`)
+      }
+    } catch (error: any) {
+      setAssignmentStatus(`❌ Error: ${error.message}`)
+    } finally {
+      setIsAssigningDriver(false)
+    }
+  }
+
   // Debug: Log first booking to see what data we're receiving
   if (bookings && bookings.length > 0) {
     console.log('First booking data:', bookings[0]);
@@ -665,6 +801,18 @@ export default function BookingList({ bookings, loading, onRefresh }:{
                 <ActionButton variant="info" onClick={() => handleViewCustomer(b)}>
                   👤 Info
                 </ActionButton>
+                {/* Show Assign Driver for confirmed/pending bookings */}
+                {(b.status === 'Confirmed' || b.status === 'PendingPayment') && (
+                  <ActionButton variant="assign" onClick={() => handleAssignDriver(b)}>
+                    🚗 Assign Driver
+                  </ActionButton>
+                )}
+                {/* Show reassign option for assigned bookings */}
+                {b.status === 'DriverAssigned' && (
+                  <ActionButton variant="assign" onClick={() => handleAssignDriver(b)}>
+                    🔄 Reassign
+                  </ActionButton>
+                )}
                 {b.canRefund && (
                   <ActionButton variant="refund" onClick={() => handleRefund(b)}>
                     💰 Refund
@@ -675,7 +823,7 @@ export default function BookingList({ bookings, loading, onRefresh }:{
                     ❌ Cancel
                   </ActionButton>
                 )}
-                {!b.canRefund && !b.canCancel && (
+                {!b.canRefund && !b.canCancel && b.status !== 'Confirmed' && b.status !== 'PendingPayment' && b.status !== 'DriverAssigned' && (
                   <NoActionsText>No actions</NoActionsText>
                 )}
               </Td>
@@ -946,6 +1094,94 @@ export default function BookingList({ bookings, loading, onRefresh }:{
                 setShowCustomerModal(false)
                 setCallStatus(null)
                 setCompleteStatus(null)
+              }}>
+                Close
+              </ActionButton>
+            </ButtonGroup>
+          </ModalContent>
+        </Modal>
+      )}
+
+      {/* Assign Driver Modal */}
+      {showAssignDriverModal && selectedBooking && (
+        <Modal onClick={() => setShowAssignDriverModal(false)}>
+          <ModalContent onClick={e => e.stopPropagation()}>
+            <ModalHeader>🚗 Assign Driver</ModalHeader>
+            
+            <CustomerInfoSection>
+              <CustomerInfoLabel>Booking</CustomerInfoLabel>
+              <CustomerInfoValue>{selectedBooking.bookingRef || selectedBooking.id}</CustomerInfoValue>
+            </CustomerInfoSection>
+
+            <CustomerInfoSection>
+              <CustomerInfoLabel>Status</CustomerInfoLabel>
+              <CustomerInfoValue>
+                <StatusBadge status={selectedBooking.status}>{selectedBooking.status}</StatusBadge>
+              </CustomerInfoValue>
+            </CustomerInfoSection>
+
+            <CustomerInfoSection>
+              <CustomerInfoLabel>Pickup</CustomerInfoLabel>
+              <CustomerInfoValue>{selectedBooking.pickupLocation || 'N/A'}</CustomerInfoValue>
+            </CustomerInfoSection>
+
+            <CustomerInfoSection>
+              <CustomerInfoLabel>Scheduled</CustomerInfoLabel>
+              <CustomerInfoValue>
+                {selectedBooking.scheduledStart ? new Date(selectedBooking.scheduledStart).toLocaleString() : 'N/A'}
+              </CustomerInfoValue>
+            </CustomerInfoSection>
+
+            <CallSection>
+              <CallSectionHeader>Select Driver</CallSectionHeader>
+              
+              {isLoadingDrivers ? (
+                <CallSectionDescription>Loading available drivers...</CallSectionDescription>
+              ) : availableDrivers.length === 0 ? (
+                <CallSectionDescription>No available drivers found. Make sure drivers are approved and online.</CallSectionDescription>
+              ) : (
+                <DriverSelect
+                  value={selectedDriverId}
+                  onChange={(e) => setSelectedDriverId(e.target.value)}
+                >
+                  <option value="">-- Select a driver --</option>
+                  {availableDrivers.map(driver => (
+                    <option key={driver.driverId} value={driver.driverId}>
+                      {driver.fullName} - ⭐ {driver.rating.toFixed(1)} - {driver.totalTrips} trips
+                      {driver.activeVehicle ? ` - ${driver.activeVehicle.make} ${driver.activeVehicle.model}` : ''}
+                      {driver.onlineStatus === 'Online' ? ' 🟢' : ' ⚪'}
+                    </option>
+                  ))}
+                </DriverSelect>
+              )}
+
+              {assignmentStatus && (
+                <CallStatusMessage success={assignmentStatus.startsWith('✅')}>
+                  {assignmentStatus}
+                </CallStatusMessage>
+              )}
+            </CallSection>
+
+            <ButtonGroup>
+              {selectedBooking.status === 'DriverAssigned' && (
+                <ActionButton
+                  variant="cancel"
+                  onClick={handleUnassignDriver}
+                  disabled={isAssigningDriver}
+                >
+                  Unassign Driver
+                </ActionButton>
+              )}
+              <ActionButton
+                variant="assign"
+                onClick={handleConfirmAssignDriver}
+                disabled={isAssigningDriver || !selectedDriverId}
+              >
+                {isAssigningDriver ? '⏳ Assigning...' : '✅ Assign Driver'}
+              </ActionButton>
+              <ActionButton onClick={() => {
+                setShowAssignDriverModal(false)
+                setAssignmentStatus(null)
               }}>
                 Close
               </ActionButton>

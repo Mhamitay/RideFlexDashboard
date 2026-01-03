@@ -237,3 +237,93 @@ export async function completeBooking(bookingId: string): Promise<{ success: boo
   return await res.json()
 }
 
+// =====================================
+// DRIVER ASSIGNMENT
+// =====================================
+
+export type AvailableDriver = {
+  driverId: string;
+  userId: string;
+  fullName: string;
+  phoneNumber: string;
+  onlineStatus: string;
+  rating: number;
+  totalTrips: number;
+  activeVehicle?: {
+    vehicleId: string;
+    make: string;
+    model: string;
+    year: number;
+    color: string;
+    licensePlate: string;
+  };
+}
+
+export type AssignDriverRequest = {
+  driverId: string;
+}
+
+export type AssignDriverResponse = {
+  success: boolean;
+  message: string;
+  bookingId?: string;
+  driverId?: string;
+  driverName?: string;
+  status?: string;
+}
+
+/**
+ * Get list of available drivers (approved, not on a trip)
+ */
+export async function getAvailableDrivers(): Promise<AvailableDriver[]> {
+  const res = await authService.authenticatedFetch(`${API_BASE}/api/dashboard/drivers`, {
+    method: 'GET',
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: 'Unknown error' }))
+    throw new Error(errorData.message || `Failed to fetch drivers: ${res.status}`)
+  }
+
+  return await res.json()
+}
+
+/**
+ * Assign a driver to a booking
+ */
+export async function assignDriver(bookingId: string, driverId: string): Promise<AssignDriverResponse> {
+  const res = await authService.authenticatedFetch(`${API_BASE}/api/dashboard/bookings/${bookingId}/assign-driver`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ driverId }),
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: 'Unknown error' }))
+    throw new Error(errorData.message || `Assign driver failed: ${res.status}`)
+  }
+
+  return await res.json()
+}
+
+/**
+ * Unassign a driver from a booking
+ */
+export async function unassignDriver(bookingId: string): Promise<AssignDriverResponse> {
+  const res = await authService.authenticatedFetch(`${API_BASE}/api/dashboard/bookings/${bookingId}/unassign-driver`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ message: 'Unknown error' }))
+    throw new Error(errorData.message || `Unassign driver failed: ${res.status}`)
+  }
+
+  return await res.json()
+}
+
