@@ -297,6 +297,23 @@ const InfoField = styled.div`
   border: 1px solid #e5e7eb;
 `
 
+const CustomerInfoSection = styled.div`
+  margin-bottom: 12px;
+`
+
+const CustomerInfoLabel = styled.div`
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 4px;
+`
+
+const CustomerInfoValue = styled.div`
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 500;
+`
+
 const SignatureImage = styled.img`
   width: 100%;
   max-width: 200px;
@@ -688,8 +705,11 @@ export default function BookingList({ bookings, loading, onRefresh }:{
    * Opens driver assignment modal and fetches available drivers
    */
   const handleAssignDriver = async (booking: RecentBooking, e?: React.MouseEvent) => {
-    e?.preventDefault()
-    e?.stopPropagation()
+    console.log('handleAssignDriver called', booking.id)
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     setSelectedBooking(booking)
     setShowAssignDriverModal(true)
     setAssignmentStatus(null)
