@@ -802,13 +802,13 @@ export default function BookingList({ bookings, loading, onRefresh }:{
                   👤 Info
                 </ActionButton>
                 {/* Show Assign Driver for confirmed/pending bookings */}
-                {(b.status === 'Confirmed' || b.status === 'PendingPayment') && (
+                {(b.status?.toLowerCase() === 'confirmed' || b.status?.toLowerCase() === 'pendingpayment') && (
                   <ActionButton variant="assign" onClick={() => handleAssignDriver(b)}>
                     🚗 Assign Driver
                   </ActionButton>
                 )}
                 {/* Show reassign option for assigned bookings */}
-                {b.status === 'DriverAssigned' && (
+                {b.status?.toLowerCase() === 'driverassigned' && (
                   <ActionButton variant="assign" onClick={() => handleAssignDriver(b)}>
                     🔄 Reassign
                   </ActionButton>
@@ -823,7 +823,7 @@ export default function BookingList({ bookings, loading, onRefresh }:{
                     ❌ Cancel
                   </ActionButton>
                 )}
-                {!b.canRefund && !b.canCancel && b.status !== 'Confirmed' && b.status !== 'PendingPayment' && b.status !== 'DriverAssigned' && (
+                {!b.canRefund && !b.canCancel && b.status?.toLowerCase() !== 'confirmed' && b.status?.toLowerCase() !== 'pendingpayment' && b.status?.toLowerCase() !== 'driverassigned' && (
                   <NoActionsText>No actions</NoActionsText>
                 )}
               </Td>
