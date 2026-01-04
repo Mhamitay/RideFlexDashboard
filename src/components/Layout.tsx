@@ -5,6 +5,7 @@ import Dashboard from './Dashboard'
 import PaymentsList from './PaymentsList'
 import WebhooksList from './WebhooksList'
 import ChatBookingsList from './ChatBookingsList'
+import Settings from './Settings'
 import { useAuth } from '../contexts/AuthContext'
 
 const LayoutContainer = styled.div`
@@ -287,9 +288,7 @@ export default function Layout() {
       case 'settings':
         return (
           <SettingsSection>
-            <h3>Dashboard Settings</h3>
-            <p>Configure your dashboard preferences, API settings, and admin options.</p>
-            <ComingSoonText>Coming soon...</ComingSoonText>
+            <Settings />
           </SettingsSection>
         )
       
