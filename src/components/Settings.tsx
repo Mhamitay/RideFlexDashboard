@@ -1,4 +1,58 @@
 import React, { useState, useEffect } from 'react';
+// Edit state for Azure Key Vault secrets
+// Add after other useState hooks
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
+  const [editPassword, setEditPassword] = useState<string>("");
+  const [updatingSecret, setUpdatingSecret] = useState(false);
+  // Start editing a secret
+  const startEdit = (index: number, value: any) => {
+    setEditingIndex(index);
+    setEditValue(String(value));
+    setEditPassword("");
+  };
+
+  // Cancel editing
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setEditValue("");
+    setEditPassword("");
+  };
+
+  // Handle update submit
+  const handleSecretUpdate = async (
+    e: React.FormEvent,
+    secretName: string,
+    index: number
+  ) => {
+    e.preventDefault();
+    setUpdatingSecret(true);
+    setError(null);
+    try {
+      const res = await authService.authenticatedFetch(
+        `${API_BASE}/api/settings/update-azure-secret`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: secretName,
+            value: editValue,
+            password: editPassword,
+          }),
+        }
+      );
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || "Failed to update secret");
+      }
+      await fetchSettings();
+      cancelEdit();
+    } catch (err: any) {
+      setError(err.message || "Failed to update secret");
+    } finally {
+      setUpdatingSecret(false);
+    }
+  };
 import styled from 'styled-components';
 import { API_BASE } from '../api';
 import authService from '../services/authService';
@@ -496,9 +550,41 @@ export default function Settings() {
                   </SecretTableCell>
                   <SecretTableCell>{secret.description}</SecretTableCell>
                   <SecretTableCell>
-                    {typeof secret.currentValue === 'boolean' 
-                      ? (secret.currentValue ? 'true' : 'false')
-                      : secret.currentValue}
+                    {editingIndex === index ? (
+                      <form
+                        style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                        onSubmit={e => handleSecretUpdate(e, secret.name, index)}
+                      >
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={e => setEditValue(e.target.value)}
+                          style={{ minWidth: 80 }}
+                        />
+                        <input
+                          type="password"
+                          placeholder="Password"
+                          value={editPassword}
+                          onChange={e => setEditPassword(e.target.value)}
+                          style={{ minWidth: 80 }}
+                        />
+                        <button type="submit" disabled={updatingSecret}>
+                          {updatingSecret ? 'Saving...' : 'Save'}
+                        </button>
+                        <button type="button" onClick={() => cancelEdit()} disabled={updatingSecret}>
+                          Cancel
+                        </button>
+                      </form>
+                    ) : (
+                      <>
+                        {typeof secret.currentValue === 'boolean'
+                          ? (secret.currentValue ? 'true' : 'false')
+                          : secret.currentValue}
+                        <button style={{ marginLeft: 8 }} onClick={() => startEdit(index, secret.currentValue)}>
+                          Edit
+                        </button>
+                      </>
+                    )}
                   </SecretTableCell>
                 </tr>
               ))}
