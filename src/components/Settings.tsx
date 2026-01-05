@@ -7,7 +7,8 @@ import authService from '../services/authService';
 interface NotificationSettings {
   enabled: boolean;
   operationsNumbers: string[];
-  };
+}
+
 interface BookingSettings {
   minimumBookingAdvanceMinutes: number;
   maxBookingDaysInAdvance: number;
@@ -294,10 +295,6 @@ export default function Settings() {
   const [azureInfo, setAzureInfo] = useState<AzureKeyVaultInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editValue, setEditValue] = useState<string>("");
-  const [editPassword, setEditPassword] = useState<string>("");
-  const [updatingSecret, setUpdatingSecret] = useState(false);
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -325,55 +322,199 @@ export default function Settings() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchSettings();
   }, []);
 
-  // Start editing a secret
-  const startEdit = (index: number, value: any) => {
-    setEditingIndex(index);
-    setEditValue(String(value));
-    setEditPassword("");
-  };
-}
-  // Cancel editing
-  const cancelEdit = () => {
-    setEditingIndex(null);
-    setEditValue("");
-    setEditPassword("");
-  };
+  if (loading) {
+    return (
+      <SettingsContainer>
+        <LoadingSpinner>Loading settings...</LoadingSpinner>
+      </SettingsContainer>
+    );
+  }
 
-  // Handle update submit
-  const handleSecretUpdate = async (
-    e: React.FormEvent,
-    secretName: string,
-    index: number
-  ) => {
-    e.preventDefault();
-    setUpdatingSecret(true);
-    setError(null);
-    try {
-      const res = await authService.authenticatedFetch(
-        `${API_BASE}/api/settings/update-azure-secret`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: secretName,
-            value: editValue,
-            password: editPassword,
-          }),
-        }
-      );
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "Failed to update secret");
-      }
-      await fetchSettings();
-      cancelEdit();
-    } catch (err: any) {
-      setError(err.message || "Failed to update secret");
-    } finally {
-      setUpdatingSecret(false);
-    }
-  };
+  if (error) {
+    return (
+      <SettingsContainer>
+        <ErrorMessage>{error}</ErrorMessage>
+        <RefreshButton onClick={fetchSettings}>Try Again</RefreshButton>
+      </SettingsContainer>
+    );
+  }
+
+  return (
+    <SettingsContainer>
+      <HeaderRow>
+        <div>
+          <PageTitle>System Settings</PageTitle>
+          <PageDescription>
+            View current configuration values. Settings are managed via Azure Key Vault.
+          </PageDescription>
+        </div>
+        <RefreshButton onClick={fetchSettings} disabled={loading}>
+          🔄 Refresh
+        </RefreshButton>
+      </HeaderRow>
+
+      {/* Booking Settings */}
+      <Section>
+        <SectionTitle>
+          📅 Booking Settings
+        </SectionTitle>
+        <SectionDescription>
+          Configure booking time restrictions and limits
+        </SectionDescription>
+
+        <SettingRow>
+          <SettingLabel>
+            <SettingName>Minimum Booking Advance Time</SettingName>
+            <SettingDescription>
+              How far in advance customers must book for same-day rides
+            </SettingDescription>
+          </SettingLabel>
+          <SettingValue>
+            <Badge variant="info">
+              {settings?.booking.minimumBookingAdvanceMinutes} minutes
+            </Badge>
+          </SettingValue>
+        </SettingRow>
+
+        <SettingRow>
+          <SettingLabel>
+            <SettingName>Maximum Booking Days in Advance</SettingName>
+            <SettingDescription>
+              How many days ahead customers can schedule a ride
+            </SettingDescription>
+          </SettingLabel>
+          <SettingValue>
+            <Badge variant="info">
+              {settings?.booking.maxBookingDaysInAdvance} days
+            </Badge>
+          </SettingValue>
+        </SettingRow>
+
+        <SettingRow>
+          <SettingLabel>
+            <SettingName>Maximum Distance</SettingName>
+            <SettingDescription>
+              Maximum allowed distance for a single ride
+            </SettingDescription>
+          </SettingLabel>
+          <SettingValue>
+            <Badge variant="info">
+              {settings?.booking.maxDistanceKm} km
+            </Badge>
+          </SettingValue>
+        </SettingRow>
+      </Section>
+
+      {/* Notification Settings */}
+      <Section>
+        <SectionTitle>
+          📱 SMS Notification Settings
+        </SectionTitle>
+        <SectionDescription>
+          Configure SMS notifications for new bookings and payments
+        </SectionDescription>
+
+        <SettingRow>
+          <SettingLabel>
+            <SettingName>SMS Notifications</SettingName>
+            <SettingDescription>
+              Send SMS alerts when new bookings are created or paid
+            </SettingDescription>
+          </SettingLabel>
+          <SettingValue>
+            <Badge variant={settings?.notifications.enabled ? 'success' : 'warning'}>
+              {settings?.notifications.enabled ? '✓ Enabled' : '✗ Disabled'}
+            </Badge>
+          </SettingValue>
+        </SettingRow>
+
+        <SettingRow>
+          <SettingLabel>
+            <SettingName>Operations Phone Numbers</SettingName>
+            <SettingDescription>
+              Phone numbers that receive booking notifications
+            </SettingDescription>
+          </SettingLabel>
+        </SettingRow>
+
+        <PhoneList>
+          {settings?.notifications.operationsNumbers && settings.notifications.operationsNumbers.length > 0 ? (
+            settings.notifications.operationsNumbers.map((phone, index) => (
+              <PhoneItem key={index}>
+                <PhoneIndex>{index + 1}</PhoneIndex>
+                <PhoneNumber>{phone}</PhoneNumber>
+              </PhoneItem>
+            ))
+          ) : (
+            <PhoneItem>
+              <EmptyPhoneText>No phone numbers configured</EmptyPhoneText>
+            </PhoneItem>
+          )}
+        </PhoneList>
+      </Section>
+
+      {/* Azure Key Vault Info */}
+      <Section>
+        <SectionTitle>
+          ☁️ Azure Key Vault Configuration
+        </SectionTitle>
+        <SectionDescription>
+          Settings are stored securely in Azure Key Vault. Use the following secret names to update values.
+        </SectionDescription>
+
+        <InfoBox>
+          <InfoTitle>
+            ℹ️ How to Update Settings
+          </InfoTitle>
+          <InfoText>
+            To modify these settings, update the corresponding secrets in Azure Key Vault. 
+            Changes will take effect after the application restarts or the configuration cache expires.
+            <br /><br />
+            <strong>Azure Portal Path:</strong> Key Vault → Secrets → Create/Update Secret
+          </InfoText>
+        </InfoBox>
+
+        {azureInfo && (
+          <SecretTable>
+            <thead>
+              <tr>
+                <SecretTableHeader>Secret Name</SecretTableHeader>
+                <SecretTableHeader>Description</SecretTableHeader>
+                <SecretTableHeader>Current Value</SecretTableHeader>
+              </tr>
+            </thead>
+            <tbody>
+              {azureInfo.secrets.map((secret, index) => (
+                <tr key={index}>
+                  <SecretTableCell>
+                    <SecretName>{secret.name}</SecretName>
+                  </SecretTableCell>
+                  <SecretTableCell>{secret.description}</SecretTableCell>
+                  <SecretTableCell>
+                    {typeof secret.currentValue === 'boolean' 
+                      ? (secret.currentValue ? 'true' : 'false')
+                      : secret.currentValue}
+                  </SecretTableCell>
+                </tr>
+              ))}
+            </tbody>
+          </SecretTable>
+        )}
+
+        <InfoBoxWarning>
+          <InfoTitleWarning>
+            💡 Adding More Phone Numbers
+          </InfoTitleWarning>
+          <InfoTextWarning>
+            {azureInfo?.note || 'To add more phone numbers, create additional secrets with incrementing indices (e.g., BookingNotifications--OperationsNumbers--3, BookingNotifications--OperationsNumbers--4, etc.)'}
+          </InfoTextWarning>
+        </InfoBoxWarning>
+      </Section>
+    </SettingsContainer>
+  );
+}
