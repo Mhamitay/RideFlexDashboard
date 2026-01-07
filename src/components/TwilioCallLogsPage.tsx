@@ -40,20 +40,32 @@ const ActionButton = styled.button`
 
 const Table = styled.table`
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin-top: 24px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  border-radius: 8px;
+  overflow: hidden;
 `
 
 const Th = styled.th`
   background: #f3f4f6;
-  padding: 10px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  border-bottom: 2px solid #e5e7eb;
   text-align: left;
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
 `
 
 const Td = styled.td`
-  padding: 10px;
+  padding: 12px 16px;
   border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+  color: #374151;
+  vertical-align: middle;
+  background: #fff;
 `
 
 const Status = styled.span<{incoming: boolean}>`
