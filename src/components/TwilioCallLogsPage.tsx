@@ -4,8 +4,8 @@ import { API_BASE } from '../api'
 import authService from '../services/authService'
 
 const Container = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -40,6 +40,7 @@ const ActionButton = styled.button`
 
 const Table = styled.table`
   width: 100%;
+  min-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   margin-top: 24px;
@@ -47,25 +48,37 @@ const Table = styled.table`
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
   border-radius: 8px;
   overflow: hidden;
+  font-family: inherit;
+
+  thead tr {
+    background: #e0e7ef;
+  }
+  tbody tr:nth-child(even) {
+    background: #f8fafc;
+  }
+  tbody tr:hover {
+    background: #e0e7ef;
+    transition: background 0.2s;
+  }
 `
 
 const Th = styled.th`
-  background: #f3f4f6;
-  padding: 12px 16px;
-  border-bottom: 2px solid #e5e7eb;
+  background: #e0e7ef;
+  padding: 14px 18px;
+  border-bottom: 2px solid #cbd5e1;
   text-align: left;
   font-size: 15px;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 700;
+  color: #1e293b;
 `
 
 const Td = styled.td`
-  padding: 12px 16px;
+  padding: 13px 18px;
   border-bottom: 1px solid #e5e7eb;
   font-size: 14px;
   color: #374151;
   vertical-align: middle;
-  background: #fff;
+  background: transparent;
 `
 
 const Status = styled.span<{incoming: boolean}>`
