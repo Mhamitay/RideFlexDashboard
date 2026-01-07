@@ -54,7 +54,7 @@ const Td = styled.td`
   border-bottom: 1px solid #e5e7eb;
 `
 
-const Status = styled.span<{incoming: boolean}>
+const Status = styled.span<{incoming: boolean}>`
   color: ${props => props.incoming ? '#059669' : '#2563eb'};
   font-weight: 500;
 `
