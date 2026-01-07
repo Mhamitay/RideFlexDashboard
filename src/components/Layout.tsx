@@ -6,6 +6,8 @@ import PaymentsList from './PaymentsList'
 import WebhooksList from './WebhooksList'
 import ChatBookingsList from './ChatBookingsList'
 import Settings from './Settings'
+import CallTwoNumbersPage from './CallTwoNumbersPage'
+import TwilioCallLogsPage from './TwilioCallLogsPage'
 import { useAuth } from '../contexts/AuthContext'
 
 const LayoutContainer = styled.div`
@@ -298,16 +300,12 @@ export default function Layout() {
           </SettingsSection>
         )
       case 'call-two-numbers':
-        // Dynamically import to avoid circular dependency
-        const CallTwoNumbersPage = require('./CallTwoNumbersPage').default
         return (
           <SettingsSection>
             <CallTwoNumbersPage />
           </SettingsSection>
         )
       case 'call-logs':
-        // Dynamically import to avoid circular dependency
-        const TwilioCallLogsPage = require('./TwilioCallLogsPage').default
         return (
           <SettingsSection>
             <TwilioCallLogsPage />
