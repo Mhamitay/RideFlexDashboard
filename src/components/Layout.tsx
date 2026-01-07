@@ -168,6 +168,16 @@ const sections: SidebarSection[] = [
     icon: '💬'
   },
   {
+    id: 'call-two-numbers',
+    label: 'Call Two Numbers',
+    icon: '📞'
+  },
+  {
+    id: 'call-logs',
+    label: 'Twilio Call Logs',
+    icon: '📑'
+  },
+  {
     id: 'refunds',
     label: 'Refund History',
     icon: '💰',
@@ -191,6 +201,10 @@ const sections: SidebarSection[] = [
 ]
 
 const sectionConfig = {
+    'call-logs': {
+      title: 'Twilio Call Logs',
+      subtitle: 'View all incoming and outgoing calls for your Twilio number'
+    },
   dashboard: {
     title: 'Dashboard',
     subtitle: 'Overview of your ride booking business'
@@ -202,6 +216,10 @@ const sectionConfig = {
   'chat-bookings': {
     title: 'Chat Bookings',
     subtitle: 'Bookings created through the AI chatbot'
+  },
+  'call-two-numbers': {
+    title: 'Call Two Numbers',
+    subtitle: 'Call two numbers and bridge them together'
   },
   refunds: {
     title: 'Refund History',
@@ -241,7 +259,6 @@ export default function Layout() {
     switch (activeSection) {
       case 'dashboard':
         return <Dashboard />
-      
       case 'bookings':
         return (
           <RefundsSection>
@@ -250,7 +267,6 @@ export default function Layout() {
             <ComingSoonText>Coming soon...</ComingSoonText>
           </RefundsSection>
         )
-      
       case 'refunds':
         return (
           <RefundsSection>
@@ -259,7 +275,6 @@ export default function Layout() {
             <ComingSoonText>Coming soon...</ComingSoonText>
           </RefundsSection>
         )
-      
       case 'analytics':
         return (
           <SettingsSection>
@@ -268,7 +283,6 @@ export default function Layout() {
             <ComingSoonText>Coming soon...</ComingSoonText>
           </SettingsSection>
         )
-
       case 'payments':
         return (
           <SettingsSection>
@@ -277,21 +291,34 @@ export default function Layout() {
             <WebhooksList />
           </SettingsSection>
         )
-      
       case 'chat-bookings':
         return (
           <SettingsSection>
             <ChatBookingsList />
           </SettingsSection>
         )
-      
+      case 'call-two-numbers':
+        // Dynamically import to avoid circular dependency
+        const CallTwoNumbersPage = require('./CallTwoNumbersPage').default
+        return (
+          <SettingsSection>
+            <CallTwoNumbersPage />
+          </SettingsSection>
+        )
+      case 'call-logs':
+        // Dynamically import to avoid circular dependency
+        const TwilioCallLogsPage = require('./TwilioCallLogsPage').default
+        return (
+          <SettingsSection>
+            <TwilioCallLogsPage />
+          </SettingsSection>
+        )
       case 'settings':
         return (
           <SettingsSection>
             <Settings />
           </SettingsSection>
         )
-      
       default:
         return <Dashboard />
     }
