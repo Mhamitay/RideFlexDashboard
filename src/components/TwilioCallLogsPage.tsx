@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
+import { API_BASE } from '../api'
+import authService from '../services/authService'
 
 const Container = styled.div`
   max-width: 800px;
@@ -74,8 +76,8 @@ export default function TwilioCallLogsPage() {
     setLoading(true)
     setError(null)
     try {
-      // This should call your backend API endpoint that proxies Twilio logs
-      const res = await fetch('/api/call/twilio-logs')
+      // Use authenticatedFetch and API_BASE to ensure correct backend
+      const res = await authService.authenticatedFetch(`${API_BASE}/api/calllogs/twilio-logs`)
       if (!res.ok) throw new Error('Failed to fetch call logs')
       const data = await res.json()
       setLogs(data.calls || [])
