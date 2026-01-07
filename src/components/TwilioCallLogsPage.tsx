@@ -1,4 +1,56 @@
 import React, { useState } from 'react'
+import Modal from 'styled-components/dist/components/Modal'
+import { callCustomer } from '../api'
+const PhoneLink = styled.span`
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  &:hover {
+    color: #1d4ed8;
+  }
+`
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`
+
+const ModalContent = styled.div`
+  background: #fff;
+  border-radius: 10px;
+  padding: 32px 28px;
+  min-width: 340px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+`
+
+const ModalTitle = styled.h3`
+  margin: 0 0 18px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+`
+
+const ModalClose = styled.button`
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #6b7280;
+  cursor: pointer;
+  margin-bottom: 8px;
+  &:hover { color: #ef4444; }
+`
 import styled from 'styled-components'
 import { API_BASE } from '../api'
 import authService from '../services/authService'
@@ -96,6 +148,11 @@ export default function TwilioCallLogsPage() {
   const [logs, setLogs] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string|null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalNumber, setModalNumber] = useState<string|null>(null)
+  const [myPhone, setMyPhone] = useState('')
+  const [callStatus, setCallStatus] = useState<string|null>(null)
+  const [isCalling, setIsCalling] = useState(false)
 
   const fetchLogs = async () => {
     setLoading(true)
@@ -110,6 +167,38 @@ export default function TwilioCallLogsPage() {
       setError(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const openModal = (number: string) => {
+    setModalNumber(number)
+    setModalOpen(true)
+    setCallStatus(null)
+    setMyPhone('')
+  }
+
+  const closeModal = () => {
+    setModalOpen(false)
+    setModalNumber(null)
+    setCallStatus(null)
+    setMyPhone('')
+    setIsCalling(false)
+  }
+
+  const handleCall = async () => {
+    if (!modalNumber || !myPhone.trim()) {
+      setCallStatus('Please enter your phone number')
+      return
+    }
+    setIsCalling(true)
+    setCallStatus(null)
+    try {
+      const result = await callCustomer({ customerPhone: modalNumber, myPhone })
+      setCallStatus(result.success ? `✅ ${result.message}` : `❌ ${result.message}`)
+    } catch (error: any) {
+      setCallStatus(`❌ Error: ${error.message}`)
+    } finally {
+      setIsCalling(false)
     }
   }
 
@@ -137,8 +226,12 @@ export default function TwilioCallLogsPage() {
             {logs.map((call, idx) => (
               <tr key={call.sid || idx}>
                 <Td><Status incoming={call.direction === 'inbound'}>{call.direction === 'inbound' ? 'Incoming' : 'Outgoing'}</Status></Td>
-                <Td>{call.from}</Td>
-                <Td>{call.to}</Td>
+                <Td>
+                  <PhoneLink onClick={() => openModal(call.from)}>{call.from}</PhoneLink>
+                </Td>
+                <Td>
+                  <PhoneLink onClick={() => openModal(call.to)}>{call.to}</PhoneLink>
+                </Td>
                 <Td>{call.status}</Td>
                 <Td>{call.start_time || '-'}</Td>
                 <Td>{call.duration || '-'}</Td>
@@ -147,6 +240,32 @@ export default function TwilioCallLogsPage() {
             ))}
           </tbody>
         </Table>
+      )}
+      {modalOpen && (
+        <ModalOverlay>
+          <ModalContent>
+            <ModalClose onClick={closeModal} title="Close">×</ModalClose>
+            <ModalTitle>Call This Number</ModalTitle>
+            <div style={{marginBottom: 12, fontWeight: 500, color: '#374151'}}>Number to call: <span style={{color:'#2563eb'}}>{modalNumber}</span></div>
+            <label style={{marginBottom: 6, fontWeight: 500}}>Your Phone Number (E.164 format)</label>
+            <input
+              type="tel"
+              value={myPhone}
+              onChange={e => setMyPhone(e.target.value)}
+              placeholder="+14155551234"
+              style={{padding:'10px', border:'1px solid #d1d5db', borderRadius:6, marginBottom:10, fontSize:16}}
+              disabled={isCalling}
+            />
+            <button
+              onClick={handleCall}
+              disabled={isCalling || !myPhone.trim()}
+              style={{background:'#667eea',color:'#fff',border:'none',borderRadius:6,padding:'12px 24px',fontSize:16,fontWeight:600,cursor:'pointer',marginTop:8,marginBottom:8}}
+            >
+              {isCalling ? '📞 Initiating Call...' : '📞 Call Now'}
+            </button>
+            {callStatus && <div style={{marginTop:8, color:callStatus.startsWith('✅')?'#059669':'#dc2626',fontWeight:500}}>{callStatus}</div>}
+          </ModalContent>
+        </ModalOverlay>
       )}
     </Container>
   )
