@@ -28,10 +28,17 @@ const ModalContent = styled.div`
   border-radius: 10px;
   padding: 32px 28px;
   min-width: 340px;
+  max-width: 95vw;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
   display: flex;
   flex-direction: column;
   align-items: stretch;
+
+  @media (max-width: 480px) {
+    min-width: unset;
+    padding: 16px 6px;
+    border-radius: 6px;
+  }
 `
 
 const ModalTitle = styled.h3`
@@ -63,6 +70,14 @@ const Container = styled.div`
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   padding: 32px 24px;
   border: 1px solid #e5e7eb;
+  box-sizing: border-box;
+
+  @media (max-width: 600px) {
+    padding: 10px 2px;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+  }
 `
 
 const Title = styled.h2`
@@ -111,6 +126,24 @@ const Table = styled.table`
   tbody tr:hover {
     background: #e0e7ef;
     transition: background 0.2s;
+  }
+
+  @media (max-width: 600px) {
+    font-size: 13px;
+    border-radius: 0;
+    box-shadow: none;
+    margin-top: 10px;
+    th, td {
+      padding: 7px 4px;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    th, td {
+      min-width: 60px;
+    }
+    th {
+      font-size: 13px;
+    }
   }
 `
 

@@ -14,6 +14,10 @@ const LayoutContainer = styled.div`
   display: flex;
   min-height: 100vh;
   background: #f8fafc;
+
+  @media (max-width: 720px) {
+    flex-direction: column;
+  }
 `
 
 const MainContent = styled.main<{sidebarOpen: boolean}>`
@@ -23,6 +27,12 @@ const MainContent = styled.main<{sidebarOpen: boolean}>`
   display: flex;
   flex-direction: column;
   overflow-x: auto;
+
+  @media (max-width: 720px) {
+    margin-left: 0;
+    width: 100vw;
+    min-width: 0;
+  }
 `
 
 const TopBar = styled.div`
@@ -103,6 +113,11 @@ const LogoutButton = styled.button`
 const ContentArea = styled.div`
   flex: 1;
   padding: 24px;
+  min-width: 0;
+
+  @media (max-width: 600px) {
+    padding: 8px 2px;
+  }
 `
 
 const PageHeader = styled.div`

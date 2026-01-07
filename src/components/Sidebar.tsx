@@ -13,6 +13,35 @@ const SidebarContainer = styled.div<{isOpen: boolean}>`
   overflow: hidden;
   border-right: 1px solid #334155;
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 720px) {
+    width: 100vw !important;
+    height: 64px;
+    left: 0;
+    top: auto;
+    bottom: 0;
+    border-right: none;
+    border-top: 1.5px solid #334155;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overflow-y: visible;
+    background: #1e293b;
+    padding: 0;
+    /* Always show horizontal scrollbar for discoverability */
+    scrollbar-width: thin;
+    &::-webkit-scrollbar {
+      height: 8px;
+      background: #1e293b;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+  }
 `
 
 const SidebarHeader = styled.div`
@@ -21,6 +50,9 @@ const SidebarHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+  @media (max-width: 720px) {
+    display: none;
+  }
 `
 
 const Logo = styled.div`
@@ -64,7 +96,9 @@ const ToggleButton = styled.button`
   font-size: 12px;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-  
+  @media (max-width: 720px) {
+    display: none;
+  }
   &:hover {
     background: #2563eb;
     transform: scale(1.1);
@@ -73,6 +107,27 @@ const ToggleButton = styled.button`
 
 const Nav = styled.nav`
   padding: 20px 0;
+  @media (max-width: 720px) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 0;
+    width: 100vw;
+    overflow-x: auto;
+    gap: 0;
+    height: 64px;
+    min-width: 100vw;
+    /* Always show horizontal scrollbar for discoverability */
+    scrollbar-width: thin;
+    &::-webkit-scrollbar {
+      height: 8px;
+      background: #1e293b;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+  }
 `
 
 const NavItem = styled.div<{active?: boolean, isOpen: boolean}>`
@@ -86,6 +141,8 @@ const NavItem = styled.div<{active?: boolean, isOpen: boolean}>`
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
+  min-width: 64px;
+  justify-content: center;
   
   &:hover {
     color: #3b82f6;
@@ -118,6 +175,32 @@ const NavItem = styled.div<{active?: boolean, isOpen: boolean}>`
     margin-left: auto;
     opacity: ${props => props.isOpen ? 1 : 0};
     transition: opacity 0.3s ease;
+  }
+
+  @media (max-width: 720px) {
+    padding: 12px 18px;
+    border-right: none;
+    border-bottom: ${props => props.active ? '3px solid #3b82f6' : '3px solid transparent'};
+    flex-direction: column;
+    gap: 2px;
+    min-width: 90px;
+    max-width: 120px;
+    .label {
+      opacity: 1;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 2px;
+      text-align: center;
+    }
+    .icon {
+      font-size: 20px;
+    }
+    .badge {
+      opacity: 1;
+      font-size: 10px;
+      margin-left: 0;
+      margin-top: 2px;
+    }
   }
 `
 
