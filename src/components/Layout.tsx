@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import styled from 'styled-components'
+// ...existing code...
 import Sidebar, { SidebarSection } from './Sidebar'
 import Dashboard from './Dashboard'
 import PaymentsList from './PaymentsList'
@@ -7,6 +7,8 @@ import WebhooksList from './WebhooksList'
 import Settings from './Settings'
 import Users from './Users'
 import CallTwoNumbersPage from './CallTwoNumbersPage'
+import SendSmsSection from './SendSmsSection'
+import styled from 'styled-components'
 import TwilioCallLogsPage from './TwilioCallLogsPage'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -185,8 +187,8 @@ const sections: SidebarSection[] = [
     icon: '👥'
   },
   {
-    id: 'call-two-numbers',
-    label: 'Call Two Numbers',
+    id: 'communication',
+    label: 'Communication',
     icon: '📞'
   },
   {
@@ -230,9 +232,9 @@ const sectionConfig = {
     title: 'Users',
     subtitle: 'Manage users and roles'
   },
-  'call-two-numbers': {
-    title: 'Call Two Numbers',
-    subtitle: 'Call two numbers and bridge them together'
+  communication: {
+    title: 'Communication',
+    subtitle: 'Call or message customers'
   },
   'call-logs': {
     title: 'Twilio Call Logs',
@@ -313,12 +315,34 @@ export default function Layout() {
             <WebhooksList />
           </SettingsSection>
         )
-      case 'call-two-numbers':
+      case 'communication':
         return (
           <SettingsSection>
-            <CallTwoNumbersPage />
+            <CommGrid>
+              <CallTwoNumbersPage />
+              <SendSmsSection />
+            </CommGrid>
           </SettingsSection>
         )
+// ...existing code...
+const CommGrid = styled.div`
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  > * {
+    flex: 1 1 340px;
+    min-width: 320px;
+    max-width: 480px;
+  }
+  @media (max-width: 900px) {
+    flex-direction: column;
+    gap: 18px;
+    > * {
+      max-width: 100%;
+    }
+  }
+`
       case 'call-logs':
         return (
           <SettingsSection>
