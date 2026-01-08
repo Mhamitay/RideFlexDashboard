@@ -117,6 +117,8 @@ const Nav = styled.nav`
     gap: 0;
     height: 64px;
     min-width: 100vw;
+    pointer-events: auto;
+    z-index: 2000;
     /* Always show horizontal scrollbar for discoverability */
     scrollbar-width: thin;
     &::-webkit-scrollbar {
@@ -148,6 +150,8 @@ const NavItem = styled.button<{active?: boolean, isOpen: boolean}>`
   font: inherit;
   background-clip: padding-box;
   -webkit-tap-highlight-color: rgba(59,130,246,0.15);
+  pointer-events: auto;
+  z-index: 2100;
   
   &:hover, &:focus-visible {
     color: #3b82f6;
@@ -190,6 +194,8 @@ const NavItem = styled.button<{active?: boolean, isOpen: boolean}>`
     gap: 2px;
     min-width: 90px;
     max-width: 120px;
+    pointer-events: auto;
+    z-index: 2100;
     .label {
       opacity: 1;
       font-size: 12px;
