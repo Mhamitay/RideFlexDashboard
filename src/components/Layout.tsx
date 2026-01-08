@@ -170,6 +170,11 @@ const ComingSoonText = styled.p`
 
 const sections: SidebarSection[] = [
   {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: '📊'
+  },
+  {
     id: 'bookings',
     label: 'Bookings',
     icon: '📋'
@@ -213,6 +218,10 @@ const sections: SidebarSection[] = [
 ]
 
 const sectionConfig = {
+  dashboard: {
+    title: 'Dashboard',
+    subtitle: 'Overview of your ride booking business'
+  },
   bookings: {
     title: 'Bookings',
     subtitle: 'Manage and view all ride bookings'
@@ -269,8 +278,14 @@ export default function Layout() {
 
   const renderSectionContent = () => {
     switch (activeSection) {
+      case 'dashboard':
+        return (
+          <SettingsSection>
+            <h2>Dashboard</h2>
+            <p>This is your dashboard. Add widgets or summary content here later.</p>
+          </SettingsSection>
+        )
       case 'bookings':
-        // Move dashboard content here
         return <Dashboard />
       case 'users':
         return <Users />
