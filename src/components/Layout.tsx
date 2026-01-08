@@ -1,5 +1,31 @@
 import React, { useState } from 'react'
-// ...existing code...
+
+
+const CommGrid = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  > * {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    flex: 1 1 380px;
+    min-width: 340px;
+    max-width: 480px;
+    margin: 0;
+  }
+  @media (max-width: 1100px) {
+    flex-direction: column;
+    gap: 18px;
+    > * {
+      max-width: 100%;
+    }
+  }
+`
 import Sidebar, { SidebarSection } from './Sidebar'
 import Dashboard from './Dashboard'
 import PaymentsList from './PaymentsList'
@@ -315,6 +341,7 @@ export default function Layout() {
             <WebhooksList />
           </SettingsSection>
         )
+
       case 'communication':
         return (
           <SettingsSection>
@@ -324,25 +351,6 @@ export default function Layout() {
             </CommGrid>
           </SettingsSection>
         )
-// ...existing code...
-const CommGrid = styled.div`
-  display: flex;
-  gap: 32px;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  > * {
-    flex: 1 1 340px;
-    min-width: 320px;
-    max-width: 480px;
-  }
-  @media (max-width: 900px) {
-    flex-direction: column;
-    gap: 18px;
-    > * {
-      max-width: 100%;
-    }
-  }
-`
       case 'call-logs':
         return (
           <SettingsSection>

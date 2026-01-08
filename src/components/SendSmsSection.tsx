@@ -70,6 +70,7 @@ export default function SendSmsSection() {
     setSending(true)
     setStatus(null)
     try {
+      // Use the same endpoint as the booking page (likely /api/communication/send-sms)
       const res = await authService.authenticatedFetch(`${API_BASE}/api/communication/send-sms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
