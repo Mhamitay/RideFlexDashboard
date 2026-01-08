@@ -1,50 +1,12 @@
 import React, { useState } from 'react'
 import Modal from 'styled-components/dist/components/Modal'
 import { callCustomer } from '../api'
-const Table = styled.table`
-  width: 100%;
-  min-width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  margin-top: 24px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  border-radius: 8px;
-  overflow: hidden;
-  font-family: inherit;
-
-  thead tr {
-    background: #e0e7ef;
-  }
-  tbody tr:nth-child(even) {
-    background: #f8fafc;
-  }
-  tbody tr:hover {
-    background: #e0e7ef;
-    transition: background 0.2s;
-  }
-
-  @media (max-width: 800px) {
-    font-size: 13px;
-    border-radius: 0;
-    box-shadow: none;
-    margin-top: 10px;
-    th, td {
-      padding: 8px 4px;
-      font-size: 12px;
-      word-break: break-word;
-      min-width: 90px;
-    }
-    th {
-      font-size: 13px;
-    }
-  }
-`
+const ModalTitle = styled.h3`
   margin: 0 0 18px 0;
   font-size: 20px;
   font-weight: 700;
   color: #1e293b;
-`
+`;
 
 const ModalClose = styled.button`
   align-self: flex-end;
@@ -276,7 +238,7 @@ export default function TwilioCallLogsPage() {
                     <PhoneLink onClick={() => openModal(call.to)}>{call.to}</PhoneLink>
                   </Td>
                   <Td>{call.status}</Td>
-                  <Td>{call.start_time || '-'}</Td>
+                  <Td>{call.start_time ? new Date(call.start_time).toLocaleString('en-CA', { timeZone: 'America/Edmonton', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-'}</Td>
                   <Td>{call.duration || '-'}</Td>
                   <Td>{call.sid}</Td>
                 </tr>
