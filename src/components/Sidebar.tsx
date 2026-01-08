@@ -130,21 +130,26 @@ const Nav = styled.nav`
   }
 `
 
-const NavItem = styled.div<{active?: boolean, isOpen: boolean}>`
+const NavItem = styled.button<{active?: boolean, isOpen: boolean}>`
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
   color: ${props => props.active ? '#3b82f6' : '#cbd5e1'};
   background: ${props => props.active ? 'rgba(59, 130, 246, 0.1)' : 'transparent'};
+  border: none;
   border-right: ${props => props.active ? '3px solid #3b82f6' : '3px solid transparent'};
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   min-width: 64px;
   justify-content: center;
+  outline: none;
+  font: inherit;
+  background-clip: padding-box;
+  -webkit-tap-highlight-color: rgba(59,130,246,0.15);
   
-  &:hover {
+  &:hover, &:focus-visible {
     color: #3b82f6;
     background: rgba(59, 130, 246, 0.05);
   }
@@ -259,8 +264,11 @@ export default function Sidebar({ sections, activeSection, onSectionChange, onTo
         {sections.map(section => (
           <NavItem
             key={section.id}
+            type="button"
             active={activeSection === section.id}
             isOpen={isOpen}
+            tabIndex={0}
+            aria-current={activeSection === section.id ? 'page' : undefined}
             onClick={() => onSectionChange(section.id)}
           >
             <span className="icon">{section.icon}</span>
