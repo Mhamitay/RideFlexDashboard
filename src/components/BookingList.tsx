@@ -11,6 +11,21 @@ const Table = styled.table`
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   border: 1px solid #e5e7eb;
+
+  @media (max-width: 800px) {
+    font-size: 13px;
+    border-radius: 0;
+    box-shadow: none;
+    th, td {
+      padding: 8px 4px;
+      font-size: 12px;
+      word-break: break-word;
+      min-width: 90px;
+    }
+    th {
+      font-size: 13px;
+    }
+  }
 `
 
 const Th = styled.th`
@@ -794,65 +809,67 @@ export default function BookingList({ bookings, loading, onRefresh }:{
 
   return (
     <>
-      <Table>
-        <thead>
-          <tr>
-            <Th>Booked At</Th>
-            <Th>Scheduled For</Th>
-            <Th>ID</Th>
-            <Th>Status</Th>
-            <Th>Distance</Th>
-            <Th>Amount</Th>
-            <Th>Pickup</Th>
-            <Th>Dropoff</Th>
-            <Th>🔧 Admin Actions</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {bookings.map(b=> (
-            <tr key={b.id}>
-              <Td>{b.createdAt ? new Date(b.createdAt).toLocaleString() : ''}</Td>
-              <Td>{b.scheduledStart ? new Date(b.scheduledStart).toLocaleString() : '—'}</Td>
-              <Td><Mono>{b.bookingRef ?? b.id}</Mono></Td>
-              <Td><StatusBadge status={b.status}>{b.status}</StatusBadge></Td>
-              <Td>{b.distance != null ? `${b.distance.toFixed(1)} km` : '—'}</Td>
-              <Td><strong>${(b.totalAmount||0).toFixed(2)}</strong></Td>
-              <Td>{renderAddress(b.pickupLocation ?? b.clientName ?? '')}</Td>
-              <Td>{renderAddress(b.dropoffLocation ?? '')}</Td>
-              <Td>
-                <ActionButton variant="info" onClick={() => handleViewCustomer(b)}>
-                  👤 Info
-                </ActionButton>
-                {/* Show Assign Driver for confirmed/pending bookings */}
-                {(b.status?.toLowerCase() === 'confirmed' || b.status?.toLowerCase() === 'pendingpayment') && (
-                  <ActionButton variant="assign" onClick={(e) => handleAssignDriver(b, e)}>
-                    🚗 Assign Driver
-                  </ActionButton>
-                )}
-                {/* Show reassign option for assigned bookings */}
-                {b.status?.toLowerCase() === 'driverassigned' && (
-                  <ActionButton variant="assign" onClick={(e) => handleAssignDriver(b, e)}>
-                    🔄 Reassign
-                  </ActionButton>
-                )}
-                {b.canRefund && (
-                  <ActionButton variant="refund" onClick={() => handleRefund(b)}>
-                    💰 Refund
-                  </ActionButton>
-                )}
-                {b.canCancel && (
-                  <ActionButton variant="cancel" onClick={() => handleCancel(b)}>
-                    ❌ Cancel
-                  </ActionButton>
-                )}
-                {!b.canRefund && !b.canCancel && b.status?.toLowerCase() !== 'confirmed' && b.status?.toLowerCase() !== 'pendingpayment' && b.status?.toLowerCase() !== 'driverassigned' && (
-                  <NoActionsText>No actions</NoActionsText>
-                )}
-              </Td>
+      <div style={{overflowX: 'auto', width: '100%'}}>
+        <Table>
+          <thead>
+            <tr>
+              <Th>Booked At</Th>
+              <Th>Scheduled For</Th>
+              <Th>ID</Th>
+              <Th>Status</Th>
+              <Th>Distance</Th>
+              <Th>Amount</Th>
+              <Th>Pickup</Th>
+              <Th>Dropoff</Th>
+              <Th>🔧 Admin Actions</Th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {bookings.map(b=> (
+              <tr key={b.id}>
+                <Td>{b.createdAt ? new Date(b.createdAt).toLocaleString() : ''}</Td>
+                <Td>{b.scheduledStart ? new Date(b.scheduledStart).toLocaleString() : '—'}</Td>
+                <Td><Mono>{b.bookingRef ?? b.id}</Mono></Td>
+                <Td><StatusBadge status={b.status}>{b.status}</StatusBadge></Td>
+                <Td>{b.distance != null ? `${b.distance.toFixed(1)} km` : '—'}</Td>
+                <Td><strong>${(b.totalAmount||0).toFixed(2)}</strong></Td>
+                <Td>{renderAddress(b.pickupLocation ?? b.clientName ?? '')}</Td>
+                <Td>{renderAddress(b.dropoffLocation ?? '')}</Td>
+                <Td>
+                  <ActionButton variant="info" onClick={() => handleViewCustomer(b)}>
+                    👤 Info
+                  </ActionButton>
+                  {/* Show Assign Driver for confirmed/pending bookings */}
+                  {(b.status?.toLowerCase() === 'confirmed' || b.status?.toLowerCase() === 'pendingpayment') && (
+                    <ActionButton variant="assign" onClick={(e) => handleAssignDriver(b, e)}>
+                      🚗 Assign Driver
+                    </ActionButton>
+                  )}
+                  {/* Show reassign option for assigned bookings */}
+                  {b.status?.toLowerCase() === 'driverassigned' && (
+                    <ActionButton variant="assign" onClick={(e) => handleAssignDriver(b, e)}>
+                      🔄 Reassign
+                    </ActionButton>
+                  )}
+                  {b.canRefund && (
+                    <ActionButton variant="refund" onClick={() => handleRefund(b)}>
+                      💰 Refund
+                    </ActionButton>
+                  )}
+                  {b.canCancel && (
+                    <ActionButton variant="cancel" onClick={() => handleCancel(b)}>
+                      ❌ Cancel
+                    </ActionButton>
+                  )}
+                  {!b.canRefund && !b.canCancel && b.status?.toLowerCase() !== 'confirmed' && b.status?.toLowerCase() !== 'pendingpayment' && b.status?.toLowerCase() !== 'driverassigned' && (
+                    <NoActionsText>No actions</NoActionsText>
+                  )}
+                </Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </div>
 
       {/* Refund Modal */}
       {showRefundModal && selectedBooking && (

@@ -1,47 +1,45 @@
 import React, { useState } from 'react'
 import Modal from 'styled-components/dist/components/Modal'
 import { callCustomer } from '../api'
-const PhoneLink = styled.span`
-  color: #2563eb;
-  text-decoration: underline;
-  cursor: pointer;
-  &:hover {
-    color: #1d4ed8;
-  }
-`
-
-const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-`
-
-const ModalContent = styled.div`
+const Table = styled.table`
+  width: 100%;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 24px;
   background: #fff;
-  border-radius: 10px;
-  padding: 32px 28px;
-  min-width: 340px;
-  max-width: 95vw;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: inherit;
 
-  @media (max-width: 480px) {
-    min-width: unset;
-    padding: 16px 6px;
-    border-radius: 6px;
+  thead tr {
+    background: #e0e7ef;
+  }
+  tbody tr:nth-child(even) {
+    background: #f8fafc;
+  }
+  tbody tr:hover {
+    background: #e0e7ef;
+    transition: background 0.2s;
+  }
+
+  @media (max-width: 800px) {
+    font-size: 13px;
+    border-radius: 0;
+    box-shadow: none;
+    margin-top: 10px;
+    th, td {
+      padding: 8px 4px;
+      font-size: 12px;
+      word-break: break-word;
+      min-width: 90px;
+    }
+    th {
+      font-size: 13px;
+    }
   }
 `
-
-const ModalTitle = styled.h3`
   margin: 0 0 18px 0;
   font-size: 20px;
   font-weight: 700;
@@ -105,12 +103,21 @@ const ActionButton = styled.button`
   }
 `
 
+const TableWrapper = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 24px;
+  @media (max-width: 600px) {
+    margin-top: 10px;
+  }
+`;
+
 const Table = styled.table`
   width: 100%;
-  min-width: 100%;
+  min-width: 700px;
   border-collapse: separate;
   border-spacing: 0;
-  margin-top: 24px;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.03);
   border-radius: 8px;
@@ -128,24 +135,26 @@ const Table = styled.table`
     transition: background 0.2s;
   }
 
-  @media (max-width: 600px) {
+  th, td {
+    padding: 14px 8px;
     font-size: 13px;
+    word-break: break-all;
+    min-width: 80px;
+  }
+  th {
+    font-size: 13px;
+  }
+
+  @media (max-width: 600px) {
     border-radius: 0;
     box-shadow: none;
-    margin-top: 10px;
     th, td {
       padding: 7px 4px;
       font-size: 12px;
-      word-break: break-all;
-    }
-    th, td {
-      min-width: 60px;
-    }
-    th {
-      font-size: 13px;
+      min-width: 80px;
     }
   }
-`
+`;
 
 const Th = styled.th`
   background: #e0e7ef;
@@ -243,36 +252,38 @@ export default function TwilioCallLogsPage() {
       </ActionButton>
       {error && <ErrorMsg>{error}</ErrorMsg>}
       {logs.length > 0 && (
-        <Table>
-          <thead>
-            <tr>
-              <Th>Direction</Th>
-              <Th>From</Th>
-              <Th>To</Th>
-              <Th>Status</Th>
-              <Th>Start Time</Th>
-              <Th>Duration (s)</Th>
-              <Th>SID</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.map((call, idx) => (
-              <tr key={call.sid || idx}>
-                <Td><Status incoming={call.direction === 'inbound'}>{call.direction === 'inbound' ? 'Incoming' : 'Outgoing'}</Status></Td>
-                <Td>
-                  <PhoneLink onClick={() => openModal(call.from)}>{call.from}</PhoneLink>
-                </Td>
-                <Td>
-                  <PhoneLink onClick={() => openModal(call.to)}>{call.to}</PhoneLink>
-                </Td>
-                <Td>{call.status}</Td>
-                <Td>{call.start_time || '-'}</Td>
-                <Td>{call.duration || '-'}</Td>
-                <Td>{call.sid}</Td>
+        <div style={{overflowX: 'auto', width: '100%'}}>
+          <Table>
+            <thead>
+              <tr>
+                <Th>Direction</Th>
+                <Th>From</Th>
+                <Th>To</Th>
+                <Th>Status</Th>
+                <Th>Start Time</Th>
+                <Th>Duration (s)</Th>
+                <Th>SID</Th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {logs.map((call, idx) => (
+                <tr key={call.sid || idx}>
+                  <Td><Status incoming={call.direction === 'inbound'}>{call.direction === 'inbound' ? 'Incoming' : 'Outgoing'}</Status></Td>
+                  <Td>
+                    <PhoneLink onClick={() => openModal(call.from)}>{call.from}</PhoneLink>
+                  </Td>
+                  <Td>
+                    <PhoneLink onClick={() => openModal(call.to)}>{call.to}</PhoneLink>
+                  </Td>
+                  <Td>{call.status}</Td>
+                  <Td>{call.start_time || '-'}</Td>
+                  <Td>{call.duration || '-'}</Td>
+                  <Td>{call.sid}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
       )}
       {modalOpen && (
         <ModalOverlay>
