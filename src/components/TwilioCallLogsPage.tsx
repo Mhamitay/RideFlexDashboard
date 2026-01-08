@@ -1,5 +1,89 @@
 import React, { useState } from 'react'
-import Modal from 'styled-components/dist/components/Modal'
+// Removed date-fns-tz import
+// Removed broken Modal import
+const PhoneLink = styled.span`
+  color: #2563eb;
+  text-decoration: underline;
+  cursor: pointer;
+  &:hover {
+    color: #1d4ed8;
+  }
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background: #fff;
+  border-radius: 10px;
+  padding: 32px 28px;
+  min-width: 340px;
+  max-width: 95vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  @media (max-width: 480px) {
+    min-width: unset;
+    padding: 16px 6px;
+    border-radius: 6px;
+  }
+`;
+
+const ModalLabel = styled.label`
+  margin-bottom: 6px;
+  font-weight: 500;
+`;
+
+const ModalNumber = styled.div`
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #374151;
+  span {
+    color: #2563eb;
+  }
+`;
+
+const ModalInput = styled.input`
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 16px;
+`;
+
+const ModalButton = styled.button`
+  background: #667eea;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  &:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+  }
+`;
+
+const ModalCallStatus = styled.div<{success?: boolean}>`
+  margin-top: 8px;
+  font-weight: 500;
+  color: ${props => props.success ? '#059669' : '#dc2626'};
+`;
 import { callCustomer } from '../api'
 const ModalTitle = styled.h3`
   margin: 0 0 18px 0;
@@ -103,19 +187,6 @@ const Table = styled.table`
     word-break: break-all;
     min-width: 80px;
   }
-  th {
-    font-size: 13px;
-  }
-
-  @media (max-width: 600px) {
-    border-radius: 0;
-    box-shadow: none;
-    th, td {
-      padding: 7px 4px;
-      font-size: 12px;
-      min-width: 80px;
-    }
-  }
 `;
 
 const Th = styled.th`
@@ -126,7 +197,24 @@ const Th = styled.th`
   font-size: 15px;
   font-weight: 700;
   color: #1e293b;
-`
+`;
+// Robust Calgary time formatter for UTC ISO strings
+function formatCalgaryTime(utcString: string) {
+  if (!utcString) return '-';
+  const utcDate = new Date(utcString);
+  // Show with time zone abbreviation for clarity
+  return utcDate.toLocaleString('en-CA', {
+    timeZone: 'America/Edmonton',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    timeZoneName: 'short'
+  });
+}
 
 const Td = styled.td`
   padding: 13px 18px;
@@ -135,7 +223,7 @@ const Td = styled.td`
   color: #374151;
   vertical-align: middle;
   background: transparent;
-`
+`;
 
 const Status = styled.span<{incoming: boolean}>`
   color: ${props => props.incoming ? '#059669' : '#2563eb'};
@@ -214,7 +302,7 @@ export default function TwilioCallLogsPage() {
       </ActionButton>
       {error && <ErrorMsg>{error}</ErrorMsg>}
       {logs.length > 0 && (
-        <div style={{overflowX: 'auto', width: '100%'}}>
+        <TableWrapper>
           <Table>
             <thead>
               <tr>
@@ -222,7 +310,8 @@ export default function TwilioCallLogsPage() {
                 <Th>From</Th>
                 <Th>To</Th>
                 <Th>Status</Th>
-                <Th>Start Time</Th>
+                <Th>Start Time (Calgary)</Th>
+                <Th>Original Time (UTC)</Th>
                 <Th>Duration (s)</Th>
                 <Th>SID</Th>
               </tr>
@@ -238,38 +327,41 @@ export default function TwilioCallLogsPage() {
                     <PhoneLink onClick={() => openModal(call.to)}>{call.to}</PhoneLink>
                   </Td>
                   <Td>{call.status}</Td>
-                  <Td>{call.start_time ? new Date(call.start_time).toLocaleString('en-CA', { timeZone: 'America/Edmonton', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-'}</Td>
+                  <Td>{call.start_time ? formatCalgaryTime(call.start_time) : '-'}</Td>
+                  <Td>{call.start_time || '-'}</Td>
                   <Td>{call.duration || '-'}</Td>
                   <Td>{call.sid}</Td>
                 </tr>
               ))}
             </tbody>
           </Table>
-        </div>
+        </TableWrapper>
       )}
       {modalOpen && (
         <ModalOverlay>
           <ModalContent>
             <ModalClose onClick={closeModal} title="Close">×</ModalClose>
             <ModalTitle>Call This Number</ModalTitle>
-            <div style={{marginBottom: 12, fontWeight: 500, color: '#374151'}}>Number to call: <span style={{color:'#2563eb'}}>{modalNumber}</span></div>
-            <label style={{marginBottom: 6, fontWeight: 500}}>Your Phone Number (E.164 format)</label>
-            <input
+            <ModalNumber>Number to call: <span>{modalNumber}</span></ModalNumber>
+            <ModalLabel>Your Phone Number (E.164 format)</ModalLabel>
+            <ModalInput
               type="tel"
               value={myPhone}
               onChange={e => setMyPhone(e.target.value)}
               placeholder="+14155551234"
-              style={{padding:'10px', border:'1px solid #d1d5db', borderRadius:6, marginBottom:10, fontSize:16}}
               disabled={isCalling}
             />
-            <button
+            <ModalButton
               onClick={handleCall}
               disabled={isCalling || !myPhone.trim()}
-              style={{background:'#667eea',color:'#fff',border:'none',borderRadius:6,padding:'12px 24px',fontSize:16,fontWeight:600,cursor:'pointer',marginTop:8,marginBottom:8}}
             >
               {isCalling ? '📞 Initiating Call...' : '📞 Call Now'}
-            </button>
-            {callStatus && <div style={{marginTop:8, color:callStatus.startsWith('✅')?'#059669':'#dc2626',fontWeight:500}}>{callStatus}</div>}
+            </ModalButton>
+            {callStatus && (
+              <ModalCallStatus success={callStatus.startsWith('✅')}>
+                {callStatus}
+              </ModalCallStatus>
+            )}
           </ModalContent>
         </ModalOverlay>
       )}
