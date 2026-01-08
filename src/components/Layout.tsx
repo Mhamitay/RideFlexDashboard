@@ -4,8 +4,8 @@ import Sidebar, { SidebarSection } from './Sidebar'
 import Dashboard from './Dashboard'
 import PaymentsList from './PaymentsList'
 import WebhooksList from './WebhooksList'
-import ChatBookingsList from './ChatBookingsList'
 import Settings from './Settings'
+import Users from './Users'
 import CallTwoNumbersPage from './CallTwoNumbersPage'
 import TwilioCallLogsPage from './TwilioCallLogsPage'
 import { useAuth } from '../contexts/AuthContext'
@@ -170,19 +170,14 @@ const ComingSoonText = styled.p`
 
 const sections: SidebarSection[] = [
   {
-    id: 'dashboard',
-    label: 'Dashboard',
-    icon: '📊'
-  },
-  {
     id: 'bookings',
-    label: 'All Bookings',
+    label: 'Bookings',
     icon: '📋'
   },
   {
-    id: 'chat-bookings',
-    label: 'Chat Bookings',
-    icon: '💬'
+    id: 'users',
+    label: 'Users',
+    icon: '👥'
   },
   {
     id: 'call-two-numbers',
@@ -218,25 +213,21 @@ const sections: SidebarSection[] = [
 ]
 
 const sectionConfig = {
-    'call-logs': {
-      title: 'Twilio Call Logs',
-      subtitle: 'View all incoming and outgoing calls for your Twilio number'
-    },
-  dashboard: {
-    title: 'Dashboard',
-    subtitle: 'Overview of your ride booking business'
-  },
   bookings: {
-    title: 'All Bookings',
+    title: 'Bookings',
     subtitle: 'Manage and view all ride bookings'
   },
-  'chat-bookings': {
-    title: 'Chat Bookings',
-    subtitle: 'Bookings created through the AI chatbot'
+  users: {
+    title: 'Users',
+    subtitle: 'Manage users and roles'
   },
   'call-two-numbers': {
     title: 'Call Two Numbers',
     subtitle: 'Call two numbers and bridge them together'
+  },
+  'call-logs': {
+    title: 'Twilio Call Logs',
+    subtitle: 'View all incoming and outgoing calls for your Twilio number'
   },
   refunds: {
     title: 'Refund History',
@@ -245,6 +236,10 @@ const sectionConfig = {
   analytics: {
     title: 'Analytics',
     subtitle: 'Detailed insights and reports'
+  },
+  payments: {
+    title: 'Payments',
+    subtitle: 'View and manage payments'
   },
   settings: {
     title: 'Settings',
@@ -274,16 +269,11 @@ export default function Layout() {
 
   const renderSectionContent = () => {
     switch (activeSection) {
-      case 'dashboard':
-        return <Dashboard />
       case 'bookings':
-        return (
-          <RefundsSection>
-            <h3>All Bookings</h3>
-            <p>This section will show a comprehensive list of all bookings with advanced filtering and search capabilities.</p>
-            <ComingSoonText>Coming soon...</ComingSoonText>
-          </RefundsSection>
-        )
+        // Move dashboard content here
+        return <Dashboard />
+      case 'users':
+        return <Users />
       case 'refunds':
         return (
           <RefundsSection>
@@ -308,12 +298,6 @@ export default function Layout() {
             <WebhooksList />
           </SettingsSection>
         )
-      case 'chat-bookings':
-        return (
-          <SettingsSection>
-            <ChatBookingsList />
-          </SettingsSection>
-        )
       case 'call-two-numbers':
         return (
           <SettingsSection>
@@ -333,7 +317,12 @@ export default function Layout() {
           </SettingsSection>
         )
       default:
-        return <Dashboard />
+        return (
+          <SettingsSection>
+            <h2>Welcome to RideFlex Admin Dashboard</h2>
+            <p>Select a section from the sidebar to get started.</p>
+          </SettingsSection>
+        )
     }
   }
 
