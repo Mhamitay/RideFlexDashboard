@@ -219,7 +219,7 @@ const sections: SidebarSection[] = [
   },
   {
     id: 'call-logs',
-    label: 'Twilio Call Logs',
+    label: 'Call Logs',
     icon: '📑'
   },
   {
@@ -263,8 +263,8 @@ const sectionConfig = {
     subtitle: 'Call or message customers'
   },
   'call-logs': {
-    title: 'Twilio Call Logs',
-    subtitle: 'View all incoming and outgoing calls for your Twilio number'
+    title: 'Call Logs',
+    subtitle: 'View all incoming and outgoing calls'
   },
   refunds: {
     title: 'Refund History',

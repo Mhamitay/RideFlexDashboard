@@ -296,7 +296,7 @@ export default function TwilioCallLogsPage() {
 
   return (
     <Container>
-      <Title>Twilio Call Logs</Title>
+      <Title>Call Logs</Title>
       <ActionButton onClick={fetchLogs} disabled={loading}>
         {loading ? 'Loading...' : 'Fetch Call Logs'}
       </ActionButton>
