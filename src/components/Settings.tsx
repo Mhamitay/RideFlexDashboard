@@ -18,8 +18,6 @@ interface BookingSettings {
 
   booking: BookingSettings;
   notifications: NotificationSettings;
-}
-
 interface OutOfHoursResponse {
   outOfHours: boolean;
 }
