@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ToggleSwitch from './ToggleSwitch';
 import styled from 'styled-components';
 import { API_BASE } from '../api';
 import authService from '../services/authService';
@@ -15,9 +16,12 @@ interface BookingSettings {
   maxDistanceKm: number;
 }
 
-interface AllSettings {
   booking: BookingSettings;
   notifications: NotificationSettings;
+}
+
+interface OutOfHoursResponse {
+  outOfHours: boolean;
 }
 
 interface AzureKeyVaultSecret {
@@ -290,19 +294,22 @@ const HeaderRow = styled.div`
   margin-bottom: 24px;
 `;
 
-export default function Settings() {
   const [settings, setSettings] = useState<AllSettings | null>(null);
   const [azureInfo, setAzureInfo] = useState<AzureKeyVaultInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [outOfHours, setOutOfHours] = useState<boolean>(false);
+  const [outOfHoursLoading, setOutOfHoursLoading] = useState<boolean>(true);
+  const [outOfHoursSaving, setOutOfHoursSaving] = useState<boolean>(false);
 
   const fetchSettings = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [settingsRes, azureRes] = await Promise.all([
+      const [settingsRes, azureRes, outOfHoursRes] = await Promise.all([
         authService.authenticatedFetch(`${API_BASE}/api/settings`),
-        authService.authenticatedFetch(`${API_BASE}/api/settings/azure-keyvault-info`)
+        authService.authenticatedFetch(`${API_BASE}/api/settings/azure-keyvault-info`),
+        authService.authenticatedFetch(`${API_BASE}/api/settings/outofhours`)
       ]);
 
       if (!settingsRes.ok) {
@@ -316,10 +323,37 @@ export default function Settings() {
         const azureData = await azureRes.json();
         setAzureInfo(azureData);
       }
+
+      if (outOfHoursRes.ok) {
+        const outOfHoursData: OutOfHoursResponse = await outOfHoursRes.json();
+        setOutOfHours(outOfHoursData.outOfHours);
+      }
+      setOutOfHoursLoading(false);
     } catch (err: any) {
       setError(err.message || 'Failed to load settings');
+      setOutOfHoursLoading(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOutOfHoursToggle = async (checked: boolean) => {
+    setOutOfHoursSaving(true);
+    try {
+      const res = await authService.authenticatedFetch(`${API_BASE}/api/settings/outofhours`, {
+        method: 'POST',
+        body: JSON.stringify(checked),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (res.ok) {
+        setOutOfHours(checked);
+      } else {
+        throw new Error('Failed to update Out of Hours');
+      }
+    } catch (err) {
+      alert('Failed to update Out of Hours setting.');
+    } finally {
+      setOutOfHoursSaving(false);
     }
   };
 
@@ -357,6 +391,32 @@ export default function Settings() {
           🔄 Refresh
         </RefreshButton>
       </HeaderRow>
+
+      {/* Out of Hours Toggle */}
+      <Section>
+        <SectionTitle>
+          ⏰ Out of Hours
+        </SectionTitle>
+        <SectionDescription>
+          Toggle to enable or disable out-of-hours mode for the system.
+        </SectionDescription>
+        <SettingRow>
+          <SettingLabel>
+            <SettingName>Out of Hours Mode</SettingName>
+            <SettingDescription>
+              When enabled, the system will operate in out-of-hours mode.
+            </SettingDescription>
+          </SettingLabel>
+          <SettingValue>
+            <ToggleSwitch
+              checked={outOfHours}
+              onChange={handleOutOfHoursToggle}
+              label={outOfHours ? 'Enabled' : 'Disabled'}
+              disabled={outOfHoursLoading || outOfHoursSaving}
+            />
+          </SettingValue>
+        </SettingRow>
+      </Section>
 
       {/* Booking Settings */}
       <Section>
