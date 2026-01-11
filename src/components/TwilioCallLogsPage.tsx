@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { DateTime } from 'luxon';
 // Removed date-fns-tz import
 // Removed broken Modal import
 const PhoneLink = styled.span`
@@ -198,22 +199,21 @@ const Th = styled.th`
   font-weight: 700;
   color: #1e293b;
 `;
-// Robust Calgary time formatter for UTC ISO strings
+// Robust Calgary time formatter for UTC ISO strings (uses real timezone, handles DST)
 function formatCalgaryTime(utcString: string) {
   if (!utcString) return '-';
-  const utcDate = new Date(utcString);
-  // Show with time zone abbreviation for clarity
-  return utcDate.toLocaleString('en-CA', {
-    timeZone: 'America/Edmonton',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-    timeZoneName: 'short'
-  });
+  let dt = DateTime.fromISO(utcString, { zone: 'utc' });
+  if (!dt.isValid) {
+    // Try parsing as 'yyyy-MM-dd HH:mm:ss' in UTC
+    dt = DateTime.fromFormat(utcString, 'yyyy-MM-dd HH:mm:ss', { zone: 'utc' });
+  }
+  if (!dt.isValid) {
+    dt = DateTime.fromJSDate(new Date(utcString), { zone: 'utc' });
+  }
+  if (!dt.isValid) {
+    return 'Invalid Date';
+  }
+  return dt.setZone('America/Edmonton').toFormat('yyyy-MM-dd hh:mm:ss a');
 }
 
 const Td = styled.td`
@@ -245,6 +245,8 @@ export default function TwilioCallLogsPage() {
   const [myPhone, setMyPhone] = useState('')
   const [callStatus, setCallStatus] = useState<string|null>(null)
   const [isCalling, setIsCalling] = useState(false)
+    const [filter, setFilter] = useState<'all' | 'incoming' | 'outgoing'>('all');
+    const [hide14388339093, setHide14388339093] = useState(false);
 
   const fetchLogs = async () => {
     setLoading(true)
@@ -261,6 +263,24 @@ export default function TwilioCallLogsPage() {
       setLoading(false)
     }
   }
+
+  // Filter controls
+  const FilterBar = styled.div`
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+  `;
+
+  const FilterButton = styled.button<{active: boolean}>`
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: none;
+    background: ${({active}) => active ? '#6366f1' : '#e5e7eb'};
+    color: ${({active}) => active ? 'white' : '#1e293b'};
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  `;
 
   const openModal = (number: string) => {
     setModalNumber(number)
@@ -297,6 +317,20 @@ export default function TwilioCallLogsPage() {
   return (
     <Container>
       <Title>Call Logs</Title>
+      <FilterBar>
+        <FilterButton active={filter === 'all'} onClick={() => setFilter('all')}>All</FilterButton>
+        <FilterButton active={filter === 'incoming'} onClick={() => setFilter('incoming')}>Incoming</FilterButton>
+        <FilterButton active={filter === 'outgoing'} onClick={() => setFilter('outgoing')}>Outgoing</FilterButton>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 16 }}>
+            <input
+              type="checkbox"
+              checked={hide14388339093}
+              onChange={e => setHide14388339093(e.target.checked)}
+              style={{ marginRight: 4 }}
+            />
+            Hide calls from +14388339093
+          </label>
+      </FilterBar>
       <ActionButton onClick={fetchLogs} disabled={loading}>
         {loading ? 'Loading...' : 'Fetch Call Logs'}
       </ActionButton>
@@ -317,7 +351,19 @@ export default function TwilioCallLogsPage() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((call, idx) => (
+              {logs
+                .filter(call => {
+                  if (filter === 'all') return true;
+                  if (filter === 'incoming') return call.direction === 'inbound';
+                  if (filter === 'outgoing') return call.direction !== 'inbound';
+                  return true;
+                })
+                  .filter(call => {
+                    if (!hide14388339093) return true;
+                    // Hide if from or to is +14388339093
+                    return call.from !== '+14388339093' && call.to !== '+14388339093';
+                  })
+                .map((call, idx) => (
                 <tr key={call.sid || idx}>
                   <Td><Status incoming={call.direction === 'inbound'}>{call.direction === 'inbound' ? 'Incoming' : 'Outgoing'}</Status></Td>
                   <Td>
@@ -327,7 +373,9 @@ export default function TwilioCallLogsPage() {
                     <PhoneLink onClick={() => openModal(call.to)}>{call.to}</PhoneLink>
                   </Td>
                   <Td>{call.status}</Td>
-                  <Td>{call.start_time ? formatCalgaryTime(call.start_time) : '-'}</Td>
+                   <Td>
+                     {call.start_time ? formatCalgaryTime(call.start_time) : '-'}
+                   </Td>
                   <Td>{call.start_time || '-'}</Td>
                   <Td>{call.duration || '-'}</Td>
                   <Td>{call.sid}</Td>

@@ -81,7 +81,6 @@ const SettingRow = styled.div`
 `;
 
 const SettingLabel = styled.div`
-  flex: 1;
 `;
 
 const SettingName = styled.div`
@@ -108,7 +107,6 @@ const Badge = styled.span<{ variant: 'success' | 'warning' | 'info' }>`
   border-radius: 16px;
   font-size: 13px;
   font-weight: 500;
-
   ${({ variant }) => {
     switch (variant) {
       case 'success':
@@ -126,6 +124,8 @@ const Badge = styled.span<{ variant: 'success' | 'warning' | 'info' }>`
           background: #e0e7ff;
           color: #3730a3;
         `;
+      default:
+        return '';
     }
   }}
 `;
