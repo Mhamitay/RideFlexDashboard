@@ -12,12 +12,16 @@ interface NotificationSettings {
 
 interface BookingSettings {
   minimumBookingAdvanceMinutes: number;
+
   maxBookingDaysInAdvance: number;
   maxDistanceKm: number;
 }
 
+interface AllSettings {
   booking: BookingSettings;
   notifications: NotificationSettings;
+}
+
 interface OutOfHoursResponse {
   outOfHours: boolean;
 }
@@ -291,7 +295,7 @@ const HeaderRow = styled.div`
   align-items: center;
   margin-bottom: 24px;
 `;
-
+export default function Settings() {
   const [settings, setSettings] = useState<AllSettings | null>(null);
   const [azureInfo, setAzureInfo] = useState<AzureKeyVaultInfo | null>(null);
   const [loading, setLoading] = useState(true);
