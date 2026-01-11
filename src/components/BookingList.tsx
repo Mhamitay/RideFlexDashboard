@@ -1182,6 +1182,7 @@ export default function BookingList({ bookings, loading, onRefresh }:{
                 <DriverSelect
                   value={selectedDriverId}
                   onChange={(e) => setSelectedDriverId(e.target.value)}
+                  aria-label="Select driver for booking"
                 >
                   <option value="">-- Select a driver --</option>
                   {availableDrivers.map(driver => (

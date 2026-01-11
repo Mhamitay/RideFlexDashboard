@@ -1,4 +1,5 @@
 import React from 'react';
+import styled from 'styled-components';
 
 interface ToggleSwitchProps {
   checked: boolean;
@@ -7,17 +8,27 @@ interface ToggleSwitchProps {
   disabled?: boolean;
 }
 
+const ToggleLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const ToggleInput = styled.input`
+  width: 40px;
+  height: 24px;
+`;
+
 const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ checked, onChange, label, disabled }) => (
-  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-    <input
+  <ToggleLabel>
+    <ToggleInput
       type="checkbox"
       checked={checked}
       onChange={e => onChange(e.target.checked)}
       disabled={disabled}
-      style={{ width: 40, height: 24 }}
     />
     <span>{label}</span>
-  </label>
+  </ToggleLabel>
 );
 
 export default ToggleSwitch;
